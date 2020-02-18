@@ -5,10 +5,10 @@
 
 1. lucene与elasticsearch
    	咱们之前讲的处理分词，构建倒排索引，等等，都是这个叫lucene的做的。那么能不能说这个lucene就是搜索引擎呢？
-   	还不能。lucene只是一个提供全文搜索功能类库的核心工具包，而真正使用它还需要一个完善的服务框架搭建起来的应用。
-   	好比lucene是类似于jdk，而搜索引擎软件就是tomcat 的。
-   	目前市面上流行的搜索引擎软件，主流的就两款，elasticsearch和solr,这两款都是基于lucene的搭建的，可以独立部署启动的搜索引擎服务软件。由于内核相同，所以两者除了服务器安装、部署、管理、集群以外，对于数据的操作，修改、添加、保存、查询等等都十分类似。就好像都是支持sql语言的两种数据库软件。只要学会其中一个另一个很容易上手。
-   	从实际企业使用情况来看，elasticSearch的市场份额逐步在取代solr，国内百度、京东、新浪都是基于elasticSearch实现的搜索功能。国外就更多了 像维基百科、GitHub、Stack Overflow等等也都是基于ES的
+      	还不能。lucene只是一个提供全文搜索功能类库的核心工具包，而真正使用它还需要一个完善的服务框架搭建起来的应用。
+      	好比lucene是类似于jdk，而搜索引擎软件就是tomcat 的。
+      	目前市面上流行的搜索引擎软件，主流的就两款，elasticsearch和solr,这两款都是基于lucene的搭建的，可以独立部署启动的搜索引擎服务软件。由于内核相同，所以两者除了服务器安装、部署、管理、集群以外，对于数据的操作，修改、添加、保存、查询等等都十分类似。就好像都是支持sql语言的两种数据库软件。只要学会其中一个另一个很容易上手。
+      	从实际企业使用情况来看，elasticSearch的市场份额逐步在取代solr，国内百度、京东、新浪都是基于elasticSearch实现的搜索功能。国外就更多了 像维基百科、GitHub、Stack Overflow等等也都是基于ES的
 
 2. elasticSearch的使用场景
 
@@ -140,12 +140,92 @@
 
        如果之前没建过index或者type，es 会自动创建。
 
-     - 
+     - 直接用id查找  
 
-     - 
+       ```
+    GET movie_index/movie/1
+       ```
 
+     - 修改—整体替换  
+   
+       ```
+       PUT /movie_index/movie/3
+       {
+         "id":"3",
+         "name":"incident red sea",
+         "doubanScore":"5.0",
+         "actorList":[  
+       	{"id":"1","name":"zhang chen"}
+         ]
+       }
+       ```
+   
+     - 修改—某个字段  
+   
+       ```
+       POST movie_index/movie/3/_update
+       { 
+         "doc": {
+           "doubanScore":"7.0"
+         } 
+       }
+       ```
+   
+     - 删除一个document  
+   
+       ```
+       DELETE movie_index/movie/3
+       ```
+   
+     - 搜索type全部数据 
+   
+       ```
+       GET movie_index/movie/_search
+       ```
+   
+       结果
+   
+       ```
+       {
+         "took": 2,    //耗费时间 毫秒
+         "timed_out": false, //是否超时
+         "_shards": {
+           "total": 5,   //发送给全部5个分片
+           "successful": 5,
+           "skipped": 0,
+           "failed": 0
+         },
+         "hits": {
+           "total": 3,  //命中3条数据
+           "max_score": 1,   //最大评分
+           "hits": [  // 结果
+             {
+               "_index": "movie_index",
+               "_type": "movie",
+               "_id": 2,
+               "_score": 1,
+               "_source": {
+                 "id": "2",
+                 "name": "operation meigong river",
+                 "doubanScore": 8.0,
+                 "actorList": [
+                   {
+                     "id": "1",
+                     "name": "zhang han yu"
+                   }
+                 ]
+               }
+                 。。。。。。。。
+                 。。。。。。。。
+             }
+       
+       ```
+   
      - 
-
+   
+     - 
+   
    - 
+   
    - 
 
