@@ -143,7 +143,7 @@
      - 直接用id查找  
 
        ```
-    GET movie_index/movie/1
+      GET movie_index/movie/1
        ```
 
      - 修改—整体替换  
@@ -221,7 +221,230 @@
        
        ```
    
-     - 
+     - 按条件查询(全部)
+   
+       ```
+       GET movie_index/movie/_search
+       {
+         "query":{
+           "match_all": {}
+         }
+       }
+       ```
+   
+     - 按分词查询
+   
+       ```
+       GET movie_index/movie/_search
+       {
+         "query":{
+           "match": {"name":"red"}
+         }
+       }
+       注意结果的评分
+       ```
+   
+     - 按分词子属性查询
+   
+       ```
+       GET movie_index/movie/_search
+       {
+         "query":{
+           "match": {"actorList.name":"zhang"}
+         }
+       }
+       ```
+   
+     - #### match phrase
+   
+       ```
+       GET movie_index/movie/_search
+       {
+           "query":{
+             "match_phrase": {"name":"operation red"}
+           }
+       }
+       按短语查询，不再利用分词技术，直接用短语在原始数据中匹配
+       ```
+   
+     - fuzzy查询
+   
+       ```
+       GET movie_index/movie/_search
+       {
+           "query":{
+             "fuzzy": {"name":"rad"}
+           }
+       }
+       校正匹配分词，当一个单词都无法准确匹配，es通过一种算法对非常接近的单词也给与一定的评分，能够查询出来，但是消耗更多的性能。
+       ```
+   
+     - 过滤--查询后过滤
+   
+       ```
+       GET movie_index/movie/_search
+       {
+           "query":{
+             "match": {"name":"red"}
+           },
+           "post_filter":{
+             "term": {
+               "actorList.id": 3
+             }
+           }
+       }
+       ```
+   
+     - 过滤--查询前过滤（推荐）
+   
+       ```
+       GET movie_index/movie/_search
+       { 
+           "query":{
+               "bool":{
+                 "filter":[ {"term": {  "actorList.id": "1"  }},
+                            {"term": {  "actorList.id": "3"  }}
+                  ], 
+                  "must":{"match":{"name":"red"}}
+                }
+           }
+       }
+       ```
+   
+     - 过滤--按范围过滤
+   
+       ```
+       GET movie_index/movie/_search
+       {
+          "query": {
+            "bool": {
+              "filter": {
+                "range": {
+                   "doubanScore": {"gte": 8}
+                }
+              }
+            }
+          }
+       }
+       ```
+   
+       关于范围操作符：
+   
+       | gt   | 大于     |
+       | ---- | -------- |
+       | lt   | 小于     |
+       | get  | 大于等于 |
+       | lte  | 小于等于 |
+   
+     - 排序
+   
+       ```
+       GET movie_index/movie/_search
+       {
+         "query":{
+           "match": {"name":"red sea"}
+         }
+         , "sort": [
+           {
+             "doubanScore": {
+               "order": "desc"
+             }
+           }
+         ]
+       }
+       ```
+   
+     - 分页查询
+   
+       ```
+       GET movie_index/movie/_search
+       {
+         "query": { "match_all": {} },
+         "from": 1,
+         "size": 1
+       }
+       ```
+   
+     - 指定查询的字段
+   
+       ```
+       GET movie_index/movie/_search
+       {
+         "query": { "match_all": {} },
+         "_source": ["name", "doubanScore"]
+       }
+       ```
+   
+     - 高亮
+   
+       ```
+       GET movie_index/movie/_search
+       {
+           "query":{
+             "match": {"name":"red sea"}
+           },
+           "highlight": {
+             "fields": {"name":{} }
+           }
+           
+       }
+       
+       
+       
+       自定义标签
+       GET movie_index/movie/_search
+       {
+           "query":{
+             "match": {"name":"red sea"}
+           },
+           "highlight": {
+             "pre_tags": ["<b>"], 
+             "post_tags": ["</b>"], 
+             "fields": {"name":{} }
+           }
+           
+       }
+       ```
+   
+     - 聚合
+   
+       ```
+       取出每个演员共参演了多少部电影
+       GET movie_index/movie/_search
+       { 
+         "aggs": {
+           "groupby_actor": {
+             "terms": {
+               "field": "actorList.name.keyword"  
+             }
+           } 
+         }
+       }
+       
+       每个演员参演电影的平均分是多少，并按评分排序
+       GET movie_index/movie/_search
+       { 
+         "aggs": {
+           "groupby_actor_id": {
+             "terms": {
+               "field": "actorList.name.keyword" ,
+               "order": {
+                 "avg_score": "desc"
+                 }
+             },
+             "aggs": {
+               "avg_score":{
+                 "avg": {
+                   "field": "doubanScore" 
+                 }
+               }
+              }
+           } 
+         }
+       }
+       ```
+   
+       
    
      - 
    
