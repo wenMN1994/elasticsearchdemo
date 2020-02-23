@@ -3,6 +3,230 @@
 
 ### Elasticsearch 安装
 
+1. 安装包下载
+
+   Elasticsearch官网： https://www.elastic.co/products/elasticsearch
+
+   https://www.elastic.co/downloads/past-releases/elasticsearch-5-6-4
+
+   本教程程选择的版本是elasticsearch-5.6.4
+
+2. 安装elasticsearch（拷贝elasticsearch-5.6.4.rpm到/opt目录下）
+
+   - 安装命令
+
+     ![](/src/main/resources/images/image-20200223214601878.png)
+
+   - 注册并启动服务
+
+     ![image-20200223215202964](/src/main/resources/images/image-20200223215202964.png)
+
+     CentOS6.8 通过chkconfig --list可以查看
+
+     ![image-20200223215349586](/src/main/resources/images/image-20200223215349586.png)
+
+     CentOS7.x 可以通过systemctl list-unit-files|grep elasticsearch
+
+     ![image-20200223215437593](/src/main/resources/images/image-20200223215437593.png)
+
+     改为enable
+
+     ```
+     systemctl enable elasticsearch
+     ```
+
+     启动之前为elasticsearch配置jdk
+
+     vim /etc/sysconfig/elasticsearch 中修改JAVA_HOME路径的路径
+
+     ![image-20200223215920961](/src/main/resources/images/image-20200223215920961.png)
+
+     启动elasticsearch
+
+     ![image-20200223215958990](/src/main/resources/images/image-20200223215958990.png)
+
+     查看进程
+
+     ![image-20200223220058827](/src/main/resources/images/image-20200223220058827.png)
+
+     ```
+     核心文件
+     
+     /etc/elasticsearch/elasticsearch.yml
+     
+     数据文件路径
+     
+     /var/lib/elasticsearch/
+     
+     日志文件路径e
+     
+     /var/log/elasticsearch/elasticsearch.log
+     ```
+
+   - 修改配置文件
+
+     ```
+     vim /etc/elasticsearch/elasticsearch.yml
+     ```
+
+     修改yml配置的注意事项:
+
+     每行必须顶格，不能有空格
+
+     “：”后面必须有一个空格
+
+     集群名称，同一集群名称必须相同
+
+     ![image-20200223220239011](/src/main/resources/images/image-20200223220239011.png)
+
+     单个节点名称
+
+     ![image-20200223220255076](/src/main/resources/images/image-20200223220255076.png)
+
+     网络部分 改为当前的ip地址 ，端口号保持默认9200就行
+
+     ![image-20200223220415709](/src/main/resources/images/image-20200223220415709.png)
+
+     把bootstrap自检程序关掉
+
+     ![image-20200223220436405](/src/main/resources/images/image-20200223220436405.png)
+
+     bootstrap.system_call_filter: false
+
+     自发现配置：新节点向集群报到的主机名
+
+     ![image-20200223220545537](/src/main/resources/images/image-20200223220545537.png)
+
+     修改jvm.options
+
+     ![image-20200223220840757](/src/main/resources/images/image-20200223220840757.png)
+
+     
+
+   - 修改linux配置
+
+     为什么要修改linux配置？
+
+     默认elasticsearch是单机访问模式，就是只能自己访问自己。
+
+     但是我们之后一定会设置成允许应用服务器通过网络方式访问。这时，elasticsearch就会因为嫌弃单机版的低端默认配置而报错，甚至无法启动。
+
+     所以我们在这里就要把服务器的一些限制打开，能支持更多并发。
+
+     **问题****1****：****max file descriptors [4096] for elasticsearch process likely too low, increase to at least [65536] elasticsearch**
+
+     原因：系统允许 Elasticsearch 打开的最大文件数需要修改成65536
+
+     解决：vi /etc/security/limits.conf
+
+     添加内容：
+
+     \* soft nofile 65536
+
+     \* hard nofile 131072
+
+     \* soft nproc 2048
+
+     \* hard nproc 65536
+
+      
+
+     注意：“*” 不要省略掉
+
+      
+
+     **问题****2****：****max number of threads [1024] for user [judy2] likely too low, increase to at least [2048]** （CentOS7.x 不用改）
+
+      
+
+     原因：允许最大进程数修该成2048
+
+     解决：vi /etc/security/limits.d/90-nproc.conf  
+
+     修改如下内容：
+
+     \* soft nproc 1024
+
+     \#修改为
+
+      \* soft nproc 2048
+
+      
+
+     **问题****3****：****max virtual memory areas vm.max_map_count [65530] likely too low, increase to at least [262144]** （CentOS7.x 不用改）
+
+     原因：一个进程可以拥有的虚拟内存区域的数量。
+
+     解决：可零时提高vm.max_map_count的大小
+
+     命令：sysctl -w vm.max_map_count=262144
+
+   - 重启linux
+
+   - 启动
+
+     ![image-20200223221634317](/src/main/resources/images/image-20200223221634317.png)
+
+   - 测试
+
+     直接浏览器访问http://192.168.163.129:9200
+
+     ![image-20200223222809685](/src/main/resources/images/image-20200223222809685.png)
+
+   - 如果启动未成功
+
+     vim  /var/log/elasticsearch/my-es.log
+
+3. 安装kibana
+
+   拷贝kibana-5.6.4-linux-x86_64.tar 到/opt下
+
+   解压缩
+
+   进入kibana主目录的config目录下
+
+   ![image-20200223223013902](/src/main/resources/images/image-20200223223013902.png)
+
+   
+
+   vim kibana.yml
+
+   server.host: “你本机ip”
+
+   ![image-20200223223100366](/src/main/resources/images/image-20200223223100366.png)
+
+   启动
+
+   在 kibana主目录bin目录下执行
+
+   nohup  ./kibana  &
+
+   然后ctrl+c退出
+
+   执行ps -ef 
+
+   ![image-20200223223450903](/src/main/resources/images/image-20200223223450903.png)
+
+   如上图,2883号进程就是kibana的进程
+
+   用浏览器打开
+
+   http://192.168.xx.xx:5601/
+
+   ![image-20200223223729871](/src/main/resources/images/image-20200223223729871.png)
+
+   点击左边菜单DevTools
+
+   在Console中 
+
+   执行 get _cluster/health  
+
+   右边的结果中，status为yellow或者green。
+
+   表示es启动正常，并且与kibana连接正常。
+
+### 利用kibana学习 elasticsearch restful api (DSL)
+
 1. lucene与elasticsearch
    	咱们之前讲的处理分词，构建倒排索引，等等，都是这个叫lucene的做的。那么能不能说这个lucene就是搜索引擎呢？
       	还不能。lucene只是一个提供全文搜索功能类库的核心工具包，而真正使用它还需要一个完善的服务框架搭建起来的应用。
